@@ -19,4 +19,48 @@
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
+<build>
+  <plugins>
+    <plugin>
+         <artifactId>maven-assembly-plugin</artifactId>
+         <version>2.5.3</version>
+         <configuration>
+          <appendAssemblyId>false</appendAssemblyId>
+          <descriptorRefs>
+           <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <finalName>socket-server</finalName>
+          <classifier>assembly</classifier>
+          <archive>
+            <manifest>
+                <addClasspath>true</addClasspath>
+                <mainClass>edu.school21.sockets.app.Main</mainClass>
+            </manifest>
+          </archive>
+         </configuration>
+         <executions>
+          <execution>
+           <id>create-archive</id>
+           <phase>package</phase>
+           <goals>
+            <goal>single</goal>
+           </goals>
+          </execution>
+         </executions>
+        </plugin>   
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.2.1</version>
+          <configuration>
+              <mainClass>edu.school21.sockets.app.Main</mainClass>
+              <arguments>
+                <argument>--port=8081</argument>
+             </arguments>
+          </configuration>
+        </plugin>
+  </plugins>
+</build>
+
 </project>

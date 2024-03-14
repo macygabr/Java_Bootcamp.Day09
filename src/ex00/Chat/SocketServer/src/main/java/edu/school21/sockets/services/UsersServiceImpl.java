@@ -7,13 +7,15 @@ import org.springframework.stereotype.Component;
 import edu.school21.sockets.models.User;
 import edu.school21.sockets.repositories.UsersRepository;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 @Component("UsersServiceImpl")
 public class UsersServiceImpl implements UsersService {
     @Autowired
     @Qualifier("UsersRepositoryImpl")
     private UsersRepository usersRepository;
 
-    public UsersServiceImpl(){
+    public UsersServiceImpl() {
         this.usersRepository = null;
     }
 
@@ -22,7 +24,9 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public void saveUser(String login, String pass) {
-        // usersRepository.save(new User(login, pass));
+    public void signUp(String login, String pass) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if(usersRepository.findByName(login).isPresent()) throw new RuntimeException("User with this login already exists");
+        usersRepository.save(new User(login, passwordEncoder.encode(pass)));
     }
 }

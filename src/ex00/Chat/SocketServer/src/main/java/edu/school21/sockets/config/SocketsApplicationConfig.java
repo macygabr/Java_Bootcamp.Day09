@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import edu.school21.sockets.repositories.UsersRepository;
+import edu.school21.sockets.server.Server;
+import edu.school21.sockets.services.UsersService;
 import edu.school21.sockets.services.UsersServiceImpl;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -33,13 +35,12 @@ public class SocketsApplicationConfig {
         hikariConfig.setPassword(DB_PASSWD);
         hikariConfig.setDriverClassName(DB_DRIVER_NAME);
         DataSource dataSource = new HikariDataSource(hikariConfig);
-        String sql = "CREATE TABLE IF NOT EXIST Users(name, password)";
-        // dataSource.getConnection().createStatement();
+        String sql = "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name VARCHAR(255), password VARCHAR(255))";
+        try {
+            dataSource.getConnection().createStatement().execute(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return dataSource;
-    }
-
-    @Bean(name = "UsersServiceImpl")
-    public UsersServiceImpl UsersServiceImpl() {
-        return new UsersServiceImpl();
     }
 }

@@ -19,16 +19,17 @@ public class User {
     private String name;
 
     @Column
-    private String passwd;
+    private String password;
 
-    public User(long id, String name) {
+    public User(long id, String name, String password) {
         this.id = id;
         this.name = name;
+        this.password = password;
     }
 
-    public User(long id, String name, String passwd) {
-        this.id = id;
+    public User(String name, String password) {
         this.name = name;
+        this.password = password;
     }
 
     public void setId(long id){

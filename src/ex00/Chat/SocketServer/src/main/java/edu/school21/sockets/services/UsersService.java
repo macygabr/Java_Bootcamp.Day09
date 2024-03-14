@@ -1,5 +1,7 @@
 package edu.school21.sockets.services;
 
+import org.springframework.stereotype.Component;
+
 public interface UsersService {
-    void saveUser(String login, String pass);
+    void signUp(String login, String pass);
 }
