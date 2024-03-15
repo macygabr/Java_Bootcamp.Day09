@@ -8,8 +8,11 @@ import org.apache.commons.cli.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -20,28 +23,8 @@ public class Main {
     private static ApplicationContext context = new AnnotationConfigApplicationContext(SocketsApplicationConfig.class);
     private static Scanner scanner = new Scanner(System.in);
     public static void main( String[] args ) {
-        try (ServerSocket serverSocket = new ServerSocket(8081)) {
-                // ParseArgs(args);
-                // StartServer();
-            while (true) {
-                Socket socket = serverSocket.accept();
-                int answer = socket.getInputStream().read();
-                for (int i = 0; i < 1000; i++) {;}
-                System.out.println(answer);
-                if(answer == 0) {
-                    OutputStream outputStream = socket.getOutputStream();
-                    outputStream.write("\0".getBytes());
-                    outputStream.flush();
-                }
-                socket.close();
-            }
-        } catch (IOException e) {
-            System.err.println("Error in the server: " + e.getMessage());
-        // } catch (ParseException e) {
-            // System.err.println("Ошибка при парсинге аргументов: " + e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // ParseArgs(args);
+        ConnectServer();
     }
     
     private static void ParseArgs(String[] args) throws ParseException {

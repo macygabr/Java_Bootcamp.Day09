@@ -8,6 +8,12 @@ import edu.school21.sockets.services.UsersServiceImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Scanner;
 
 import org.springframework.stereotype.Component;
@@ -20,23 +26,44 @@ public class Server {
     @Autowired
     @Qualifier("UsersServiceImpl")
     private UsersService usersService;
-    Scanner scanner = new Scanner(System.in);
-
-    public Server() {
-    }
+    
+    private String SignUpMode;
 
     public void run() {
-        String command = scanner.nextLine();
-        switch (command) {
-            case "signUp":
-                signUp();
-                break;
-            default:
-                throw new RuntimeException("Unknown command: " + command);
+        while(true){
+        try (ServerSocket serverSocket = new ServerSocket(8081);
+            Socket clientSocket = serverSocket.accept();
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String request = in.readLine();
+            if("Handshake".equals(request)) {
+                out.println("Hello from Server!");
+            } else {
+                out.println(MenuManager(request));
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
+    }
+    
+    private String MenuManager(String request) {
+        String answer = "200";
+        try {
+            String[] clientPackages = request.split(":");
+            answer = SignUpInDataBase(clientPackages);
+        } catch (Exception e) {
+            answer = "\033[31m"+ e.getMessage() + "\033[0m";
+        }
+        return answer;
+    }
 
-    private void signUp() {
-
+    private String SignUpInDataBase(String[] clientPackages) throws Exception {
+        if(clientPackages[0].equals("SignUp") && clientPackages.length == 3) {
+            usersService.signUp(clientPackages[1], clientPackages[2]);
+             return "Successful!";
+        }
+        return "200";
     }
 }

@@ -9,47 +9,41 @@ public class Main
 {
     private static Scanner scanner = new Scanner(System.in);
     public static void main( String[] args ) {
-        PrintMenu();
-    }
-
-    private static void PrintMenu(){
-        HeandShake();
-        
-        String servis = scanner.nextLine();
-        Send(servis);
-        String login = scanner.nextLine();
-        Send(login);
-        System.out.print("Enter password:\n> ");
-        String password = scanner.nextLine();
-        Send(password);
-    }
-
-    private static void Send(String str){
         try {
-            Socket socket = new Socket("localhost", 8081);
-            OutputStream out = socket.getOutputStream();
-            out.write(str.getBytes());
-            out.flush();
-            socket.close(); 
+            Handshake();
+            PrintMenu();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
-    private static void HeandShake(){
-        try {
-            Socket socket = new Socket("localhost", 8081);
-            OutputStream out = socket.getOutputStream();
-            out.write("\0".getBytes());
-            out.flush();
+    private static void PrintMenu() throws Exception {
+        String clientPackages = "";
+        System.out.print("> ");
+        clientPackages+=scanner.nextLine()+":";
+        System.out.print("Enter username:\n> ");
+        clientPackages+=scanner.nextLine()+":";
+        System.out.print("Enter password:\n> ");
+        clientPackages+=scanner.nextLine();
+        System.out.println(Send(clientPackages));
+    }
 
-        
-            InputStream in = socket.getInputStream();
-            int answer = in.read();
-            if(answer == 0) System.out.println("Hello from Server!");
-            socket.close();
+    private static String Send(String str) throws IOException {
+        Socket socket = new Socket("localhost", 8081);
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+        out.println(str);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String response = in.readLine();
+        if(response.equals("200")) response = "";
+        socket.close();
+        return response;
+    }
+
+    private static void Handshake() throws Exception {
+        try {
+        System.out.println(Send("Handshake"));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Server not found");
         }
     }
 }
