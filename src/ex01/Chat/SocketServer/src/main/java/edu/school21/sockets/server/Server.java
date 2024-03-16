@@ -10,71 +10,114 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
+
+import javax.crypto.Cipher;
+import javax.net.ssl.*;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.util.ArrayList;
+
 @Component("Server")
 public class Server {
-    
+
     @Autowired
     @Qualifier("UsersServiceImpl")
     private UsersService usersService;
-    
-    private String SignUpMode;
 
     public void run(int port) {
-        while(true){
-        try (ServerSocket serverSocket = new ServerSocket(port);
-            Socket clientSocket = serverSocket.accept();
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            String request = in.readLine();
-            if("Handshake".equals(request)) {
-                out.println("Hello from Server!");
-            } else {
-                System.out.println(request);
-                out.println(MenuManager(request));
+        try (ServerSocket serverSocket = new ServerSocket(port)){
+            while (true) {
+                Socket clientSocket = serverSocket.accept(); 
+                System.out.println("\033[32mClient connected: " + clientSocket + "\033[0m");
+                
+                ClientHandler clientHandler = new ClientHandler(clientSocket,usersService);
+                clientHandler.start();
             }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
     }
-    }
-    
-    private String MenuManager(String request) {
-        String answer="Error command";
-        try {
-            String[] clientPackages = request.split(":");
-            answer = SignUpDataBase(clientPackages, answer);
-            answer = SignInDataBase(clientPackages, answer);
-        } catch (Exception e) {
-            answer = "\033[31m"+ e.getMessage() + "\033[0m";
-        }
-        return answer;
-    }
-    
-    private String SignUpDataBase(String[] clientPackages, String answer) throws Exception {
-        if(clientPackages[0].equals("signUp") && clientPackages.length == 3) {
-            System.out.println(clientPackages[1] + " " + clientPackages[2]);
-             usersService.signUp(clientPackages[1], clientPackages[2]);
-             return "Successful!";
-        }
-        return answer;
+}
+
+
+class ClientHandler extends Thread {
+    private Socket clientSocket;
+    private UsersService usersService;
+    private static List<Socket> clients = new ArrayList<>();
+
+    public ClientHandler(Socket socket, UsersService usersService) {
+        this.clientSocket = socket;
+        this.usersService = usersService;
     }
 
-    private String SignInDataBase(String[] clientPackages, String answer) throws Exception {
-        if(clientPackages[0].equals("signIn") && clientPackages.length == 3) {
-             if(usersService.signIn(clientPackages[1], clientPackages[2]));
-             return "Start messaging";
+    @Override
+    public void run() {
+        try {
+            BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String message = input.readLine();
+            Handshake(message, output);
+            MessageManager(message, input, output);
+        }  catch (Exception e) {
+            e.printStackTrace();
         }
-        return answer;
+    }
+    
+    private void Handshake(String request, PrintWriter output) {
+        if(request.equals("Handshake")) output.println("Successful!");
+    }
+
+    private void MessageManager(String request, BufferedReader input ,PrintWriter output) {
+        try {
+            String[] clientPackages = request.split(":");
+            if(clientPackages[0].equals("signUp")) SignUpDataBase(clientPackages,output);
+            if(clientPackages[0].equals("signIn")) SignInDataBase(clientPackages, input ,output);
+        } catch (Exception e) {
+            output.println("\033[31m"+ e.getMessage() + "\033[0m");
+        }
+    }
+
+    private void SignUpDataBase(String[] clientPackages, PrintWriter output) throws Exception {
+        if(clientPackages.length != 3) throw new Exception("Bad request");
+        usersService.signUp(clientPackages[1], clientPackages[2]);
+        output.println("Successful!");
+    }
+    
+    private void SignInDataBase(String[] clientPackages, BufferedReader input, PrintWriter output) throws Exception {
+        if(clientPackages.length != 3) throw new Exception("Bad request");
+        if(usersService.signIn(clientPackages[1], clientPackages[2]));
+        else throw new Exception("User not found");
+        output.println("Start messaging");
+
+        clients.add(clientSocket);
+        String message = "";
+        while (!message.equals("exit")) {
+            message = input.readLine();
+            for(Socket socket : clients) {
+                PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+                out.println(": " + message);
+            }
+        }
+    }
+
+    private void SignInClient(String[] clientPackages, PrintWriter output) throws Exception {
+        if(clientPackages.length != 2) throw new Exception("Bad request");
+        output.println("Successful!");
     }
 }

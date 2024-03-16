@@ -15,9 +15,9 @@ public class UsersServiceImpl implements UsersService {
     @Qualifier("UsersRepositoryImpl")
     private UsersRepository usersRepository;
 
-    public UsersServiceImpl() {
-        this.usersRepository = null;
-    }
+    // public UsersServiceImpl() {
+    //     this.usersRepository = null;
+    // }
 
     public UsersServiceImpl(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;

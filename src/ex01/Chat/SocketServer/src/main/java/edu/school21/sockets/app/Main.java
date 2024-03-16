@@ -33,7 +33,7 @@ public class Main {
         return Integer.parseInt(arg1Value);
     }
 
-    private static void ConnectServer(int port) {
+    private static void ConnectServer(int port) throws Exception {
         Server server = context.getBean(Server.class);
         server.run(port);
     }
